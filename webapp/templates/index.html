@@ -3,28 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>yt-brainrot — dashboard</title>
-  <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-  <div class="container">
-    <h1>yt-brainrot — Dashboard</h1>
-    <p>Prosty interfejs do generowania brainrot Shorts. Ustaw liczbę shortów i kliknij <strong>Generuj</strong>.</p>
+  <title>Brainrot Factory</title>
+    <meta name="description" content="Brainrot local generator" />
+    <script type="module" crossorigin src="/static/assets/index-B7Ne6YR8.js"></script>
+    <link rel="stylesheet" crossorigin href="/static/assets/index-wWhcmWrJ.css">
+  </head>
 
-    <label>Liczba shortów:
-      <input id="count" type="number" value="1" min="1" max="10">
-    </label>
-    <label>Publikuj przez Postiz:
-      <input id="publish" type="checkbox">
-    </label>
-    <div>
-      <button id="run">Generuj</button>
-    </div>
-
-    <h2>Log</h2>
-    <pre id="log" class="log"></pre>
-  </div>
-
-  <script src="/static/app.js"></script>
-</body>
+  <body>
+    <div id="root"></div>
+  </body>
 </html>

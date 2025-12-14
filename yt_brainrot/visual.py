@@ -53,7 +53,16 @@ def create_background_from_prompt(prompt: str, out_path: str, size=(1080, 1920))
         lines = _wrap_text(prompt, font, size[0] - 80)
         y0 = 120
         for line in lines:
-            w, h = draw.textsize(line, font=font)
+            # measure text size (font API may vary across Pillow versions)
+            try:
+                bbox = font.getbbox(line)
+                w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]
+            except Exception:
+                try:
+                    w, h = font.getsize(line)
+                except Exception:
+                    # fallback guess
+                    w, h = (len(line) * 10, 20)
             draw.text(((size[0] - w) / 2, y0), line, font=font, fill=(255, 255, 255))
             y0 += h + 8
 
@@ -68,11 +77,18 @@ def _wrap_text(text, font, max_width):
     words = text.split()
     lines = []
     cur = ''
-    from PIL import ImageDraw
-    dummy = ImageDraw.Draw(Image.new('RGB', (10, 10)))
     for w in words:
         test = (cur + ' ' + w).strip()
-        if dummy.textsize(test, font=font)[0] <= max_width:
+        # measure text width safely
+        try:
+            bbox = font.getbbox(test)
+            test_w = bbox[2] - bbox[0]
+        except Exception:
+            try:
+                test_w = font.getsize(test)[0]
+            except Exception:
+                test_w = len(test) * 10
+        if test_w <= max_width:
             cur = test
         else:
             if cur:

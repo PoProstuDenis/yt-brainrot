@@ -31,7 +31,7 @@ Struktura projektu
 - `yt_brainrot/tts.py` — lokalne TTS (Coqui / piper / pyttsx3 fallback)
 - `yt_brainrot/visual.py` — generowanie obrazu tła (PIL fallback)
 - `yt_brainrot/editor.py` — łączenie audio + obrazu w short (FFmpeg)
-- `yt_brainrot/publisher.py` — szkic publikatora przez Postiz (wymaga konfiguracji)
+- `yt_brainrot/publisher.py` — szkic publikatora przez Postiz (wymaga konfiguracji; set `POSTIZ_API_URL` and `POSTIZ_API_KEY` to enable publishing)
 
 Publikacja przez Postiz
 
@@ -95,3 +95,47 @@ gunicorn -w 1 -b 0.0.0.0:5000 webapp.app:app
 ```
 
 Panel webowy: otwórz `http://localhost:5000`, ustaw liczbę shortów i kliknij "Generuj". Wyniki zostaną zapisane w katalogu `outputs/web_<timestamp>`.
+
+Konfiguracja i UI
+
+- Ustawienia endpointów: otwórz `Konfiguracja modułów` (Config) w UI i wpisz adresy lokalnych serwisów: `Ollama URL`, `Piper/Coqui URL`, `A1111 (SD) URL`. Zapisane wartości trzymają się w `localStorage` i są stosowane przy wywołaniu pipeline.
+- TTS: w głównym panelu masz przełącznik `Włącz TTS`, dropdown wyboru `Głos` (pobierany z serwera TTS, jeśli dostępny) oraz `Tempo`. Włącz/wyłącz TTS aby wygenerować tylko tekst (story) lub pełne shorty z audio.
+- Endpoint `/functions/v1/run-pipeline` obsługuje dodatkowe pola JSON: `voice`, `speed`, `piperUrl`, `ollamaUrl`, `sdUrl`, `generateTTS`.
+
+Tryby pracy i uruchamianie
+
+- Tryb minimalny (out-of-the-box): działa offline, używa PIL jako generatora obrazu i espeak/pyttsx3 jako TTS.
+- Tryb pełny: skonfiguruj lokalne serwisy i wpisz ich URL-e w panelu konfiguracyjnym — system użyje ich jeśli są dostępne.
+
+Przykładowe wywołanie endpointu `run-pipeline` (curl):
+
+```bash
+curl -X POST -H "Content-Type: application/json" \
+	-d '{"storyPrompt":"Krótka testowa","generateTTS":false}' \
+	http://localhost:5000/functions/v1/run-pipeline
+```
+
+Frontend (opcjonalnie lokalny dev):
+
+1. Przejdź do `frontend_template` i zainstaluj zależności:
+
+```bash
+cd frontend_template
+npm install
+```
+
+2. Ustaw zmienną środowiskową `VITE_SUPABASE_URL` na `http://localhost:5000` (Flask), np. w `.env`:
+
+```
+VITE_SUPABASE_URL=http://localhost:5000
+```
+
+3. Uruchom dev server frontendu:
+
+```bash
+npm run dev
+```
+
+To pozwoli UI komunikować się z lokalnym Flask-em implementującym Supabase-style functions (`/functions/v1/*`).
+
+Web UI: w sekcji Konfiguracja możesz teraz ustawić lokalne endpointy (`Ollama URL`, `A1111 URL`, `Piper/Coqui URL`) oraz domyślny głos i tempo TTS. W głównym panelu dostępny jest toggle TTS, dropdown wyboru głosu oraz pole do regulacji tempa.

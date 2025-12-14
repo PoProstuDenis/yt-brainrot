@@ -30,8 +30,11 @@ def run_once(outdir: Path, index: int, publish: bool = False):
     print(f'LLM -> {story}')
 
     audio_path = outdir / 'audio' / f'audio_{index}.wav'
-    tts.tts_to_wav(story, str(audio_path))
-    print('TTS generated:', audio_path)
+    # default voice/speed can be configured via env vars or left None
+    voice = os.environ.get('TTS_VOICE')
+    speed = os.environ.get('TTS_SPEED')
+    meta = tts.tts_to_wav(story, str(audio_path), voice=voice, speed=float(speed) if speed else None)
+    print('TTS generated:', meta)
 
     image_path = outdir / 'images' / f'bg_{index}.jpg'
     # Generate at 720x1280 then upscale to 1080x1920 later to save VRAM

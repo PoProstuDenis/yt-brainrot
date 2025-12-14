@@ -58,7 +58,35 @@ def generate_image_a1111(prompt: str, out_path: str, host: str = 'http://127.0.0
     out_p.parent.mkdir(parents=True, exist_ok=True)
     with open(out_p, 'wb') as f:
         f.write(img_bytes)
-    return str(out_p)
+
+    # Try to extract seed and prompt from response info if present
+    seed = None
+    resp_prompt = prompt
+    try:
+        info = j.get('info')
+        if info:
+            import json as _json
+            try:
+                info_j = _json.loads(info)
+                seed = info_j.get('seed') or info_j.get('all_seeds')
+                # some versions put the prompt under 'prompt'
+                resp_prompt = info_j.get('prompt', prompt)
+            except Exception:
+                # info may be a string that contains 'seed: ' etc.; best-effort parse
+                if isinstance(info, str) and 'seed' in info:
+                    # attempt simple parse
+                    try:
+                        parts = [p.strip() for p in info.split(',')]
+                        for p in parts:
+                            if p.startswith('seed'):
+                                seed = int(p.split(':')[-1].strip())
+                                break
+                    except Exception:
+                        pass
+    except Exception:
+        pass
+
+    return {'path': str(out_p), 'seed': seed, 'prompt': resp_prompt}
 
 
 if __name__ == '__main__':
