@@ -184,7 +184,22 @@ def fn_tts_voices():
     try:
         _, tts_mod, _, _, _ = _get_modules()
         v = tts_mod.list_voices()
-        return jsonify({'voices': v})
+        # Flatten into a simple list of voice identifiers for the frontend
+        flat = []
+        if isinstance(v, dict):
+            for backend, items in v.items():
+                if isinstance(items, (list, tuple)):
+                    for it in items:
+                        flat.append(f"{backend}:{it}")
+                else:
+                    flat.append(f"{backend}:{items}")
+        else:
+            try:
+                for it in v:
+                    flat.append(str(it))
+            except Exception:
+                flat = [str(v)]
+        return jsonify({'voices': flat})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -263,6 +278,38 @@ def fn_pipeline_status():
         services.append({'name': 'FFmpeg', 'url': None, 'status': 'unknown'})
 
     return jsonify({'services': services, 'allOnline': all(s['status'] == 'online' for s in services)})
+
+
+@app.route('/functions/v1/list-outputs', methods=['GET'])
+def fn_list_outputs():
+    """Return a list of recent pipeline output folders with summary info."""
+    base = Path('outputs') / 'functions'
+    items = []
+    if base.exists():
+        for d in sorted(base.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True)[:20]:
+            if d.is_dir():
+                files = {p.name: str(p) for p in d.iterdir()}
+                info = {
+                    'id': d.name,
+                    'path': str(d),
+                    'files': list(files.keys()),
+                    'mtime': int(d.stat().st_mtime)
+                }
+                items.append(info)
+    return jsonify({'items': items})
+
+
+@app.route('/functions/v1/get-file', methods=['GET'])
+def fn_get_file():
+    """Serve an output file by path (query param `path`)."""
+    p = request.args.get('path')
+    if not p:
+        return jsonify({'error': 'path query param required'}), 400
+    fp = Path(p)
+    if not fp.exists() or not fp.is_file():
+        return jsonify({'error': 'file not found'}), 404
+    from flask import send_file
+    return send_file(str(fp), as_attachment=False)
 
 
 @app.route('/functions/v1/run-pipeline', methods=['POST'])

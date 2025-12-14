@@ -10,6 +10,106 @@
   </head>
 
   <body>
+    <div class="container">
+      <header>
+        <h1>BRAINROTFactory — Auto YT Shorts Generator</h1>
+        <div class="hw">GPU: <strong>RTX 4050</strong> • VRAM: <span id="gpu-vram">—</span></div>
+      </header>
+
+      <section class="row">
+        <div class="col" id="services">
+          <h3>Status serwisów lokalnych <button id="refresh-status">Odśwież</button></h3>
+          <ul class="services-list">
+            <li>Ollama <span id="svc-ollama" class="badge unknown">—</span><div class="small">localhost:11434</div></li>
+            <li>Piper TTS <span id="svc-piper" class="badge unknown">—</span><div class="small">localhost:5000</div></li>
+            <li>Stable Diffusion <span id="svc-sd" class="badge unknown">—</span><div class="small">localhost:7860</div></li>
+          </ul>
+        </div>
+
+        <div class="col" id="controls">
+          <h3>Generator Brainrot</h3>
+          <div class="control-row">
+            <label><input type="checkbox" id="enable-tts" checked> Włącz TTS</label>
+            <label>Głos <select id="voice-select"></select></label>
+            <label>Tempo <input id="voice-speed" type="number" value="1.2" step="0.1" min="0.5" max="2.0"></label>
+          </div>
+
+          <div class="control-row">
+            <label>Ilość shortów:</label>
+            <div class="btn-group">
+              <button class="count-btn" data-count="1">1x</button>
+              <button class="count-btn" data-count="3">3x</button>
+              <button class="count-btn" data-count="5">5x</button>
+              <button class="count-btn" data-count="10">10x</button>
+            </div>
+          </div>
+
+          <div class="control-row">
+            <label>Wybierz kroki:</label>
+            <label><input type="checkbox" id="step-story" checked> Story</label>
+            <label><input type="checkbox" id="step-tts" checked> TTS</label>
+            <label><input type="checkbox" id="step-image" checked> Image</label>
+            <label><input type="checkbox" id="step-video" checked> Video</label>
+          </div>
+
+          <div class="control-row">
+            <button id="generate-btn" class="primary">Generuj 1 short</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="row stats">
+        <div class="col">
+          <h4>Pipeline: Ollama → Piper TTS → Stable Diffusion → FFmpeg → Postiz</h4>
+          <div class="status-grid">
+            <div>LLM <span id="stat-llm">—</span></div>
+            <div>TTS <span id="stat-tts">—</span></div>
+            <div>Image <span id="stat-image">—</span></div>
+            <div>Video <span id="stat-video">—</span></div>
+            <div>Publish <span id="stat-publish">—</span></div>
+          </div>
+        </div>
+
+        <div class="col">
+          <h4>Kolejka generacji</h4>
+          <ul id="queue" class="queue"></ul>
+        </div>
+      </section>
+
+      <section class="row">
+        <div class="col">
+          <h4>Ostatni wynik</h4>
+          <div id="last-result">Brak wyników</div>
+        </div>
+        <div class="col">
+          <h4>Konfiguracja modułów</h4>
+          <label>Ollama URL <input id="cfg-ollama" type="text" placeholder="http://localhost:11434"></label>
+          <label>Piper URL <input id="cfg-piper" type="text" placeholder="http://localhost:5000"></label>
+          <label>A1111 URL <input id="cfg-sd" type="text" placeholder="http://localhost:7860"></label>
+          <div><button id="save-config">Zapisz ustawienia</button> <span id="cfg-saved" class="small dim">Brak zmian</span></div>
+        </div>
+      </section>
+
+      <footer>
+        <small>Made for brainrot short automation</small>
+      </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Brainrot Factory</title>
+    <meta name="description" content="Brainrot local generator" />
+    <script type="module" crossorigin src="/static/assets/index-B7Ne6YR8.js"></script>
+    <link rel="stylesheet" crossorigin href="/static/assets/index-wWhcmWrJ.css">
+  </head>
+
+  <body>
     <div id="root"></div>
   </body>
 </html>
