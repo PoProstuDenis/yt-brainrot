@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>yt-brainrot — dashboard</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>yt-brainrot — Dashboard</h1>
+    <p>Prosty interfejs do generowania brainrot Shorts. Ustaw liczbę shortów i kliknij <strong>Generuj</strong>.</p>
+
+    <label>Liczba shortów:
+      <input id="count" type="number" value="1" min="1" max="10">
+    </label>
+    <label>Publikuj przez Postiz:
+      <input id="publish" type="checkbox">
+    </label>
+    <div>
+      <button id="run">Generuj</button>
+    </div>
+
+    <h2>Log</h2>
+    <pre id="log" class="log"></pre>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
