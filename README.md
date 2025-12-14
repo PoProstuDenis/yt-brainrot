@@ -1,0 +1,2 @@
+# yt-brainrot
+brainrot
