@@ -6,7 +6,20 @@ import os
 from pathlib import Path
 import base64
 import requests
-from yt_brainrot import llm as llm_mod, tts as tts_mod, visual as visual_mod, sd_a1111 as sd_mod, editor as editor_mod
+import sys
+
+# Ensure project root is importable when running webapp directly
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+
+def _get_modules():
+    try:
+        from yt_brainrot import llm as llm_mod, tts as tts_mod, visual as visual_mod, sd_a1111 as sd_mod, editor as editor_mod
+        return llm_mod, tts_mod, visual_mod, sd_mod, editor_mod
+    except Exception as e:
+        raise RuntimeError(f"Unable to import internal modules: {e}. Try running with PYTHONPATH=. or install package")
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 CORS(app)
@@ -56,6 +69,7 @@ def _generate_tts_bytes(text: str, piper_url: str | None = None, coqui_url: str 
 
     # local fallback
     wav_path = outdir / 'out.wav'
+    _, tts_mod, _, _, _ = _get_modules()
     meta = tts_mod.tts_to_wav(text, str(wav_path), voice=voice, speed=speed)
     with open(meta['path'], 'rb') as f:
         data = f.read()
@@ -104,6 +118,8 @@ def fn_generate_story():
     ollama_url = body.get('ollamaUrl') or body.get('ollama_url')
     model = body.get('model') or body.get('ollamaModel') or 'bielik-4b-v3.0'
     try:
+        # Lazy import modules
+        llm_mod, _, _, _, _ = _get_modules()
         # If an Ollama URL is provided, pass it to the LLM layer for best-effort HTTP call
         story = llm_mod.generate_story(prompt, model=model, ollama_url=ollama_url)
         return jsonify({'story': story, 'model': model})
@@ -154,6 +170,7 @@ def fn_generate_tts():
                 pass
 
         wav_path = outdir / 'out.wav'
+        _, tts_mod, _, _, _ = _get_modules()
         meta = tts_mod.tts_to_wav(text, str(wav_path), voice=voice, speed=speed)
         with open(meta['path'], 'rb') as f:
             b = base64.b64encode(f.read()).decode('utf-8')
@@ -165,6 +182,7 @@ def fn_generate_tts():
 @app.route('/functions/v1/tts-voices', methods=['GET'])
 def fn_tts_voices():
     try:
+        _, tts_mod, _, _, _ = _get_modules()
         v = tts_mod.list_voices()
         return jsonify({'voices': v})
     except Exception as e:
@@ -182,6 +200,7 @@ def fn_generate_image():
         # Prefer A1111 if available
         host = body.get('sdUrl') or os.environ.get('A1111_HOST', 'http://127.0.0.1:7860')
         meta = None
+        _, _, visual_mod, sd_mod, _ = _get_modules()
         if sd_mod.is_server_alive(host):
             meta = sd_mod.generate_image_a1111(prompt, str(img_path), host=host, width=720, height=1280)
             # meta is a dict with 'path' and optional 'seed' and 'prompt'
@@ -228,6 +247,7 @@ def fn_pipeline_status():
 
     # A1111
     try:
+        _, _, _, sd_mod, _ = _get_modules()
         host = sd_url or os.environ.get('A1111_HOST', 'http://127.0.0.1:7860')
         a1111_ok = sd_mod.is_server_alive(host)
         services.append({'name': 'A1111', 'url': host, 'status': 'online' if a1111_ok else 'offline'})
@@ -271,6 +291,7 @@ def fn_run_pipeline():
 
         # Story
         ollama_url = body.get('ollamaUrl') or body.get('ollama_url') or None
+        llm_mod, tts_mod, visual_mod, sd_mod, editor_mod = _get_modules()
         if generate_story:
             story = llm_mod.generate_story(prompt, model=body.get('ollamaModel') or None or 'bielik-4b-v3.0', ollama_url=ollama_url)
             result['steps']['story'] = {'status': 'completed', 'data': {'story': story}}
@@ -355,4 +376,6 @@ def fn_run_pipeline():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get('WEBAPP_PORT', os.environ.get('PORT', 5000)))
+    debug = os.environ.get('FLASK_DEBUG', 'True').lower() in ('1', 'true', 'yes')
+    app.run(host='0.0.0.0', port=port, debug=debug)
